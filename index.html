@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Buddy 英语伙伴</title>
+<style>
+  :root {
+    --bg: #0f1220;
+    --panel: #1a1f35;
+    --panel2: #232a4a;
+    --text: #eef1ff;
+    --muted: #9aa3c7;
+    --accent: #6c8cff;
+    --accent2: #4ade80;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 20px 16px 8px; text-align: center;
+  }
+  header h1 { font-size: 24px; letter-spacing: 0.5px; }
+  header p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .streak { color: var(--warn); font-size: 13px; margin-top: 6px; }
+
+  nav {
+    display: flex; gap: 6px; padding: 12px; justify-content: center; flex-wrap: wrap;
+    position: sticky; top: 0; background: rgba(15,18,32,0.95); backdrop-filter: blur(8px); z-index: 10;
+  }
+  nav button {
+    background: var(--panel); color: var(--muted); border: 1px solid #2c3458;
+    padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: 14px;
+    transition: all .15s;
+  }
+  nav button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  nav button:hover { color: #fff; }
+
+  main { max-width: 680px; margin: 0 auto; padding: 8px 16px 60px; }
+  .hidden { display: none !important; }
+
+  /* ---- Flashcard ---- */
+  .deck-info { text-align: center; color: var(--muted); font-size: 13px; margin: 8px 0 14px; }
+  .card-wrap { perspective: 1200px; }
+  .card {
+    position: relative; width: 100%; min-height: 320px; cursor: pointer;
+    transform-style: preserve-3d; transition: transform .5s;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    background: linear-gradient(160deg, var(--panel), var(--panel2));
+    border: 1px solid #2c3458; border-radius: var(--radius);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 28px; text-align: center; gap: 12px;
+  }
+  .face.back { transform: rotateY(180deg); justify-content: flex-start; padding-top: 32px; }
+  .face .word { font-size: 34px; font-weight: 700; }
+  .face .pos { color: var(--accent); font-size: 14px; }
+  .face .hint { color: var(--muted); font-size: 12px; position: absolute; bottom: 14px; }
+  .face .def { font-size: 17px; line-height: 1.5; }
+  .face .zh { font-size: 20px; color: var(--accent2); font-weight: 600; }
+  .face .ex { font-size: 15px; color: var(--muted); line-height: 1.6; font-style: italic; border-top: 1px solid #2c3458; padding-top: 12px; margin-top: 4px; }
+  .face .exzh { font-size: 14px; color: var(--muted); }
+
+  .card-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .card-actions button {
+    flex: 1; padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 15px; font-weight: 600;
+  }
+  .btn-again { background: #3a2c3f; color: var(--danger); }
+  .btn-got { background: #1f3d2f; color: var(--accent2); }
+  .btn-flip-row { display: flex; gap: 10px; margin-top: 10px; }
+  .btn-secondary {
+    flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #2c3458;
+    background: var(--panel); color: var(--muted); cursor: pointer; font-size: 13px;
+  }
+  .btn-secondary:hover { color: #fff; }
+
+  /* ---- List browse ---- */
+  .list-item {
+    background: var(--panel); border: 1px solid #2c3458; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .list-item .row1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .list-item .w { font-weight: 700; font-size: 17px; }
+  .list-item .zh { color: var(--accent2); font-size: 15px; }
+  .list-item .def { color: var(--muted); font-size: 14px; margin-top: 6px; line-height: 1.5; }
+  .list-item .ex { color: #7e88b3; font-size: 13px; margin-top: 6px; font-style: italic; line-height: 1.5; }
+  .list-item.mastered { border-color: #2e5f43; }
+  .list-item.mastered .w::after { content: " ✓"; color: var(--accent2); }
+
+  /* ---- Quiz ---- */
+  .quiz-q {
+    background: linear-gradient(160deg, var(--panel), var(--panel2));
+    border: 1px solid #2c3458; border-radius: var(--radius);
+    padding: 26px; text-align: center; margin-bottom: 16px;
+  }
+  .quiz-q .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .quiz-q .text { font-size: 19px; margin-top: 10px; line-height: 1.5; }
+  .quiz-q .zh { color: var(--accent2); margin-top: 8px; font-size: 16px; }
+  .opt {
+    display: block; width: 100%; text-align: left; background: var(--panel);
+    border: 1px solid #2c3458; color: var(--text); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 10px; cursor: pointer; font-size: 16px;
+    transition: all .15s;
+  }
+  .opt:hover { border-color: var(--accent); }
+  .opt.correct { background: #1f3d2f; border-color: var(--accent2); }
+  .opt.wrong { background: #3a2c3f; border-color: var(--danger); }
+  .quiz-score { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+  .next-btn {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    background: var(--accent); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+
+  /* ---- Translate ---- */
+  .tr-box { background: var(--panel); border: 1px solid #2c3458; border-radius: var(--radius); padding: 18px; }
+  .tr-dir { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; }
+  .tr-dir span { font-weight: 600; }
+  .tr-dir button {
+    background: var(--panel2); border: 1px solid #2c3458; color: var(--accent);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 16px;
+  }
+  textarea {
+    width: 100%; min-height: 110px; background: var(--bg); color: var(--text);
+    border: 1px solid #2c3458; border-radius: 12px; padding: 14px; font-size: 16px;
+    font-family: inherit; resize: vertical;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+  .tr-result {
+    margin-top: 14px; background: var(--bg); border: 1px solid #2c3458; border-radius: 12px;
+    padding: 14px; min-height: 60px; font-size: 17px; line-height: 1.6; white-space: pre-wrap;
+  }
+  .tr-result.placeholder { color: var(--muted); font-size: 14px; }
+  .tr-note { color: var(--muted); font-size: 12px; margin-top: 10px; line-height: 1.5; }
+
+  /* ---- Progress ---- */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat {
+    background: var(--panel); border: 1px solid #2c3458; border-radius: 12px;
+    padding: 18px; text-align: center;
+  }
+  .stat .num { font-size: 30px; font-weight: 700; color: var(--accent); }
+  .stat .lbl { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .bar-wrap { margin-top: 18px; }
+  .bar-row { margin-bottom: 14px; }
+  .bar-row .bl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .bar { height: 10px; background: var(--panel); border-radius: 5px; overflow: hidden; }
+  .bar > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 5px; transition: width .4s; }
+  .reset-btn { margin-top: 24px; width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #5a3a3a; background: transparent; color: var(--danger); cursor: pointer; }
+
+  .seg { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .seg button {
+    background: var(--panel); border: 1px solid #2c3458; color: var(--muted);
+    padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 13px;
+  }
+  .seg button.active { color: #fff; border-color: var(--accent); background: #28335c; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎓 English Buddy <span style="color:var(--accent)">英语伙伴</span></h1>
+  <p>Vocabulary · Slang · Phrases · Quiz · 中英翻译</p>
+  <div class="streak" id="streak"></div>
+</header>
+
+<nav>
+  <button data-tab="vocab" class="active">📚 Vocab</button>
+  <button data-tab="slang">🗣️ Slang</button>
+  <button data-tab="phrases">💬 Phrases</button>
+  <button data-tab="quiz">🎯 Quiz</button>
+  <button data-tab="translate">🔁 Translate</button>
+  <button data-tab="progress">📈 Progress</button>
+</nav>
+
+<main>
+  <!-- Study tabs (vocab / slang / phrases share this) -->
+  <section id="study">
+    <div class="seg">
+      <button id="modeCards" class="active">Flashcards 卡片</button>
+      <button id="modeList">Browse 浏览</button>
+      <button id="modeUnmastered">Review missed 复习</button>
+    </div>
+
+    <div id="cardsView">
+      <div class="deck-info" id="deckInfo"></div>
+      <div class="card-wrap">
+        <div class="card" id="card">
+          <div class="face front">
+            <div class="word" id="cWord"></div>
+            <div class="pos" id="cPos"></div>
+            <div class="hint">tap to flip 点击翻转</div>
+          </div>
+          <div class="face back">
+            <div class="zh" id="cZh"></div>
+            <div class="def" id="cDef"></div>
+            <div class="ex" id="cEx"></div>
+            <div class="exzh" id="cExZh"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-again" id="btnAgain">Still learning 还在学</button>
+        <button class="btn-got" id="btnGot">Got it ✓ 学会了</button>
+      </div>
+      <div class="btn-flip-row">
+        <button class="btn-secondary" id="btnShuffle">🔀 Shuffle 打乱</button>
+        <button class="btn-secondary" id="btnSpeak">🔊 Pronounce 发音</button>
+      </div>
+    </div>
+
+    <div id="listView" class="hidden"></div>
+  </section>
+
+  <!-- Quiz -->
+  <section id="quiz" class="hidden">
+    <div class="quiz-score" id="quizScore"></div>
+    <div class="quiz-q">
+      <div class="label" id="qLabel">What word matches this meaning?</div>
+      <div class="text" id="qText"></div>
+      <div class="zh" id="qZh"></div>
+    </div>
+    <div id="qOpts"></div>
+    <button class="next-btn hidden" id="qNext">Next question 下一题 →</button>
+  </section>
+
+  <!-- Translate -->
+  <section id="translate" class="hidden">
+    <div class="tr-box">
+      <div class="tr-dir">
+        <span id="trFrom">English</span>
+        <button id="trSwap" title="Swap direction">⇄</button>
+        <span id="trTo">中文 (Mandarin)</span>
+      </div>
+      <textarea id="trInput" placeholder="Type a sentence, phrase, or slang here… 在这里输入要翻译的内容"></textarea>
+      <button class="next-btn" id="trGo" style="margin-top:12px">Translate 翻译</button>
+      <div class="tr-result placeholder" id="trOut">Translation will appear here · 翻译结果会显示在这里</div>
+      <div class="tr-note">Uses the free MyMemory translation API (needs internet). For slang and idioms, also check the 🗣️ Slang and 💬 Phrases tabs — those translations are hand-written and more natural.<br>使用免费的 MyMemory 翻译接口（需联网）。俚语和习语建议优先查看俚语/短语页面，那里的翻译更地道。</div>
+    </div>
+  </section>
+
+  <!-- Progress -->
+  <section id="progress" class="hidden">
+    <div class="stat-grid">
+      <div class="stat"><div class="num" id="stMastered">0</div><div class="lbl">Words mastered 已掌握</div></div>
+      <div class="stat"><div class="num" id="stStreak">0</div><div class="lbl">Day streak 连续天数</div></div>
+      <div class="stat"><div class="num" id="stQuizRight">0</div><div class="lbl">Quiz correct 答对</div></div>
+      <div class="stat"><div class="num" id="stQuizAcc">–</div><div class="lbl">Quiz accuracy 正确率</div></div>
+    </div>
+    <div class="bar-wrap" id="bars"></div>
+    <button class="reset-btn" id="btnReset">Reset all progress 重置全部进度</button>
+  </section>
+</main>
+
+<script>
+/* =========================================================
+   CONTENT — every item: word, pos, definition, Chinese,
+   example sentence, example translation
+   ========================================================= */
+const VOCAB = [
+ {w:"meticulous",pos:"adj.",def:"very careful and precise, paying attention to every small detail",zh:"一丝不苟的；细致的",ex:"She keeps meticulous records of all her expenses.",exzh:"她对所有开支都做了细致的记录。"},
+ {w:"ubiquitous",pos:"adj.",def:"seeming to be everywhere at the same time",zh:"无处不在的",ex:"Smartphones have become ubiquitous in modern life.",exzh:"智能手机在现代生活中已经无处不在。"},
+ {w:"pragmatic",pos:"adj.",def:"dealing with problems in a practical, realistic way",zh:"务实的；实用主义的",ex:"We need a pragmatic approach, not just big ideas.",exzh:"我们需要务实的方法，而不只是宏大的想法。"},
+ {w:"resilient",pos:"adj.",def:"able to recover quickly from difficulties",zh:"有韧性的；适应力强的",ex:"Kids are surprisingly resilient after setbacks.",exzh:"孩子们在挫折之后的恢复能力惊人。"},
+ {w:"procrastinate",pos:"v.",def:"to delay doing something you should do",zh:"拖延",ex:"I always procrastinate when it's time to do taxes.",exzh:"每到报税的时候我总是拖延。"},
+ {w:"inevitable",pos:"adj.",def:"certain to happen; unavoidable",zh:"不可避免的",ex:"Change is inevitable, so we'd better adapt.",exzh:"改变是不可避免的，所以我们最好去适应。"},
+ {w:"skeptical",pos:"adj.",def:"doubting that something is true or useful",zh:"怀疑的",ex:"I'm skeptical about products that promise instant results.",exzh:"我对承诺立竿见影的产品持怀疑态度。"},
+ {w:"subtle",pos:"adj.",def:"not obvious; delicate and hard to notice",zh:"微妙的；不易察觉的",ex:"There's a subtle difference between the two flavors.",exzh:"这两种味道之间有微妙的差别。"},
+ {w:"tedious",pos:"adj.",def:"boring and lasting too long",zh:"乏味冗长的",ex:"Filling out these forms is tedious but necessary.",exzh:"填这些表格很乏味，但是必须的。"},
+ {w:"versatile",pos:"adj.",def:"able to do many different things well",zh:"多才多艺的；用途广泛的",ex:"Eggs are a versatile ingredient in cooking.",exzh:"鸡蛋是烹饪中用途很广的食材。"},
+ {w:"feasible",pos:"adj.",def:"possible and practical to do",zh:"可行的",ex:"Is it feasible to finish the project by Friday?",exzh:"周五之前完成这个项目可行吗？"},
+ {w:"redundant",pos:"adj.",def:"not needed because it repeats something",zh:"多余的；冗余的",ex:"That sentence is redundant — you already said it above.",exzh:"那句话是多余的——你上面已经说过了。"},
+ {w:"coherent",pos:"adj.",def:"logical and clearly organized",zh:"连贯的；有条理的",ex:"Try to present your argument in a coherent way.",exzh:"尽量有条理地陈述你的论点。"},
+ {w:"anticipate",pos:"v.",def:"to expect something and prepare for it",zh:"预期；预料",ex:"We anticipate strong demand for the new product.",exzh:"我们预计新产品会有强劲的需求。"},
+ {w:"deteriorate",pos:"v.",def:"to become worse over time",zh:"恶化",ex:"His health deteriorated after he stopped exercising.",exzh:"他停止锻炼后健康状况恶化了。"},
+ {w:"leverage",pos:"v./n.",def:"to use something to maximum advantage",zh:"利用；杠杆",ex:"You can leverage your network to find a job.",exzh:"你可以利用人脉来找工作。"},
+ {w:"mitigate",pos:"v.",def:"to make something bad less severe",zh:"减轻；缓解",ex:"Planting trees helps mitigate air pollution.",exzh:"种树有助于缓解空气污染。"},
+ {w:"momentum",pos:"n.",def:"the force that keeps something moving or developing",zh:"势头；动力",ex:"The campaign is gaining momentum on social media.",exzh:"这场活动在社交媒体上势头越来越猛。"},
+ {w:"consensus",pos:"n.",def:"general agreement among a group",zh:"共识",ex:"After hours of debate, we finally reached a consensus.",exzh:"经过几小时的讨论，我们终于达成了共识。"},
+ {w:"incentive",pos:"n.",def:"something that motivates you to do something",zh:"激励；诱因",ex:"The bonus is a strong incentive to work harder.",exzh:"奖金是更努力工作的强大动力。"},
+ {w:"nuance",pos:"n.",def:"a very small difference in meaning or feeling",zh:"细微差别",ex:"Translation often loses the nuances of the original.",exzh:"翻译常常会丢失原文的细微差别。"},
+ {w:"trivial",pos:"adj.",def:"of little importance",zh:"琐碎的；不重要的",ex:"Don't waste time arguing over trivial details.",exzh:"别浪费时间争论琐碎的细节。"},
+ {w:"volatile",pos:"adj.",def:"changing suddenly and unpredictably",zh:"不稳定的；波动大的",ex:"The stock market has been very volatile this week.",exzh:"本周股市波动非常大。"},
+ {w:"candid",pos:"adj.",def:"honest and direct, even when uncomfortable",zh:"坦率的",ex:"Let me be candid with you — this plan won't work.",exzh:"让我坦率地说——这个计划行不通。"},
+ {w:"diligent",pos:"adj.",def:"working hard with care and effort",zh:"勤奋的",ex:"She's a diligent student who never misses a deadline.",exzh:"她是个勤奋的学生，从不错过截止日期。"},
+ {w:"plausible",pos:"adj.",def:"seeming reasonable or likely to be true",zh:"貌似合理的",ex:"His excuse sounded plausible, but I had doubts.",exzh:"他的借口听起来合理，但我仍有疑虑。"},
+ {w:"reluctant",pos:"adj.",def:"unwilling and hesitant to do something",zh:"不情愿的",ex:"He was reluctant to ask for help.",exzh:"他不太情愿开口求助。"},
+ {w:"thrive",pos:"v.",def:"to grow, develop, or be successful",zh:"茁壮成长；蓬勃发展",ex:"Small businesses thrive in this neighborhood.",exzh:"小企业在这个社区蓬勃发展。"},
+ {w:"compromise",pos:"n./v.",def:"an agreement where each side gives up something",zh:"妥协；折中",ex:"Marriage is all about compromise.",exzh:"婚姻就是要学会互相妥协。"},
+ {w:"ambiguous",pos:"adj.",def:"having more than one possible meaning; unclear",zh:"模棱两可的；含糊的",ex:"His answer was ambiguous, so nobody knew what he meant.",exzh:"他的回答模棱两可，没人知道他是什么意思。"},
+];
+
+const SLANG = [
+ {w:"ghost (someone)",pos:"v.",def:"to suddenly stop replying to someone with no explanation, especially in dating",zh:"玩消失；突然不回消息（尤指约会中）",ex:"We went on two dates and then he ghosted me.",exzh:"我们约会了两次，然后他就玩消失了。"},
+ {w:"flaky",pos:"adj.",def:"unreliable; often cancelling plans at the last minute",zh:"不靠谱的；老放鸽子的",ex:"Don't count on Jake, he's super flaky.",exzh:"别指望杰克，他特别不靠谱。"},
+ {w:"salty",pos:"adj.",def:"bitter or annoyed, usually about something small",zh:"气不顺的；酸溜溜的；不服气的",ex:"He's still salty about losing the game last night.",exzh:"他还在为昨晚输了比赛而耿耿于怀。"},
+ {w:"lowkey",pos:"adv.",def:"slightly, secretly; without wanting to admit it openly",zh:"低调地；偷偷地；有点儿",ex:"I lowkey want to skip the party tonight.",exzh:"我其实有点想翘掉今晚的聚会。"},
+ {w:"hangry",pos:"adj.",def:"angry because you're hungry (hungry + angry)",zh:"饿到发脾气的（饿+怒）",ex:"Get me food before I get hangry.",exzh:"快给我吃的，不然我要饿到发火了。"},
+ {w:"binge-watch",pos:"v.",def:"to watch many episodes of a show in one sitting",zh:"刷剧；一口气追完",ex:"I binge-watched the whole season in one weekend.",exzh:"我一个周末刷完了一整季。"},
+ {w:"FOMO",pos:"n.",def:"Fear Of Missing Out — anxiety that others are having fun without you",zh:"错失恐惧症；怕错过",ex:"I went to the party purely out of FOMO.",exzh:"我去那个聚会纯粹是怕错过什么。"},
+ {w:"no cap",pos:"phrase",def:"no lie; I'm being completely serious",zh:"不骗你；真的（cap=说谎）",ex:"That was the best burger I've ever had, no cap.",exzh:"那是我吃过最好吃的汉堡，真的不骗你。"},
+ {w:"sketchy",pos:"adj.",def:"suspicious, unsafe, or untrustworthy",zh:"可疑的；不安全的",ex:"That alley looks sketchy — let's take the main road.",exzh:"那条小巷看起来不太安全——我们走大路吧。"},
+ {w:"I'm down",pos:"phrase",def:"I'm willing to join; count me in",zh:"我愿意；算我一个",ex:"Pizza tonight? — Yeah, I'm down.",exzh:"今晚吃披萨？——好啊，算我一个。"},
+ {w:"crash",pos:"v.",def:"to sleep, especially suddenly or at someone else's place",zh:"倒头就睡；借宿",ex:"Mind if I crash on your couch tonight?",exzh:"今晚我能睡你家沙发吗？"},
+ {w:"vibe",pos:"n./v.",def:"the mood or atmosphere of a place, person, or situation",zh:"氛围；感觉",ex:"This café has a really chill vibe.",exzh:"这家咖啡馆的氛围特别放松。"},
+ {w:"spill the tea",pos:"phrase",def:"to share gossip or juicy details",zh:"爆料；说八卦",ex:"OK, spill the tea — what happened at the wedding?",exzh:"好了，快爆料——婚礼上到底发生了什么？"},
+ {w:"throw shade",pos:"phrase",def:"to subtly insult or criticize someone",zh:"含沙射影地讽刺；阴阳怪气",ex:"She was throwing shade at her ex all night.",exzh:"她整晚都在含沙射影地讽刺她前任。"},
+ {w:"GOAT",pos:"n.",def:"Greatest Of All Time — the best ever",zh:"史上最佳",ex:"Many people call Jordan the GOAT of basketball.",exzh:"很多人称乔丹为篮球史上最佳。"},
+ {w:"sus",pos:"adj.",def:"suspicious; seeming dishonest or fishy",zh:"可疑的（suspicious 的缩写）",ex:"He deleted all his messages? That's pretty sus.",exzh:"他把所有消息都删了？这也太可疑了。"},
+ {w:"mid",pos:"adj.",def:"mediocre; average and unimpressive",zh:"很一般；平庸",ex:"Honestly, the movie was pretty mid.",exzh:"说实话，这部电影挺一般的。"},
+ {w:"flex",pos:"v./n.",def:"to show off, especially wealth or achievements",zh:"炫耀；秀",ex:"He bought that car just to flex on his friends.",exzh:"他买那辆车就是为了在朋友面前炫耀。"},
+ {w:"cringe",pos:"adj./n.",def:"embarrassing or awkward to watch",zh:"尴尬的；令人脚趾抠地的",ex:"His dance moves at the office party were so cringe.",exzh:"他在公司聚会上的舞姿尴尬得让人脚趾抠地。"},
+ {w:"hyped",pos:"adj.",def:"very excited about something",zh:"超级兴奋的；期待的",ex:"I'm so hyped for the concert this weekend!",exzh:"我对这周末的演唱会超级期待！"},
+ {w:"broke",pos:"adj.",def:"having no money",zh:"没钱的；穷的",ex:"I can't go out this week, I'm totally broke.",exzh:"这周我不能出去玩了，我彻底没钱了。"},
+ {w:"cram",pos:"v.",def:"to study intensely right before an exam",zh:"临时抱佛脚；考前突击",ex:"I crammed all night for the final exam.",exzh:"为了期末考试我熬夜突击了一整晚。"},
+ {w:"chill",pos:"adj./v.",def:"relaxed; or to relax / hang out",zh:"放松的；闲待着",ex:"We're just chilling at home tonight.",exzh:"我们今晚就在家闲待着。"},
+ {w:"slay",pos:"v.",def:"to do something impressively well",zh:"表现惊艳；杀疯了",ex:"You slayed that presentation today!",exzh:"你今天的演讲太惊艳了！"},
+ {w:"sketch out",pos:"phrase",def:"to make someone feel uneasy or creeped out",zh:"让人发毛；让人不舒服",ex:"That guy staring at us is sketching me out.",exzh:"那个一直盯着我们的人让我浑身不自在。"},
+];
+
+const PHRASES = [
+ {w:"break the ice",pos:"idiom",def:"to start a conversation in an awkward situation",zh:"打破僵局；破冰",ex:"He told a joke to break the ice at the meeting.",exzh:"他讲了个笑话来打破会议上的僵局。"},
+ {w:"hit the sack",pos:"idiom",def:"to go to bed",zh:"去睡觉",ex:"It's been a long day — I'm gonna hit the sack.",exzh:"今天太累了——我要去睡觉了。"},
+ {w:"piece of cake",pos:"idiom",def:"something very easy",zh:"小菜一碟",ex:"The test was a piece of cake.",exzh:"这次考试简直是小菜一碟。"},
+ {w:"under the weather",pos:"idiom",def:"feeling slightly sick",zh:"身体不舒服",ex:"I'm feeling a bit under the weather today.",exzh:"我今天感觉有点不舒服。"},
+ {w:"on the fence",pos:"idiom",def:"undecided between two options",zh:"犹豫不决；摇摆不定",ex:"I'm still on the fence about buying the car.",exzh:"买不买这辆车，我还在犹豫。"},
+ {w:"cost an arm and a leg",pos:"idiom",def:"to be extremely expensive",zh:"贵得要命",ex:"Rent in this city costs an arm and a leg.",exzh:"这个城市的房租贵得要命。"},
+ {w:"once in a blue moon",pos:"idiom",def:"very rarely",zh:"千载难逢；极少",ex:"We only eat out once in a blue moon.",exzh:"我们很少在外面吃饭。"},
+ {w:"beat around the bush",pos:"idiom",def:"to avoid saying something directly",zh:"拐弯抹角",ex:"Stop beating around the bush and tell me what happened.",exzh:"别拐弯抹角了，告诉我发生了什么。"},
+ {w:"call it a day",pos:"idiom",def:"to stop working for the day",zh:"今天到此为止；收工",ex:"We've done enough — let's call it a day.",exzh:"我们做得够多了——今天就到这儿吧。"},
+ {w:"cut corners",pos:"idiom",def:"to do something cheaply or carelessly to save time/money",zh:"偷工减料；走捷径",ex:"They cut corners on construction and it shows.",exzh:"他们施工偷工减料，一眼就能看出来。"},
+ {w:"get the hang of it",pos:"idiom",def:"to learn how to do something after practice",zh:"掌握窍门；上手",ex:"Driving stick is hard at first, but you'll get the hang of it.",exzh:"开手动挡一开始很难，但你会慢慢上手的。"},
+ {w:"in a nutshell",pos:"idiom",def:"summarized in a few words",zh:"简而言之",ex:"In a nutshell, we need more time and more money.",exzh:"简而言之，我们需要更多的时间和资金。"},
+ {w:"long story short",pos:"phrase",def:"skipping the details and giving the conclusion",zh:"长话短说",ex:"Long story short, we missed the flight.",exzh:"长话短说，我们误机了。"},
+ {w:"my bad",pos:"phrase",def:"casual way to say 'my mistake, sorry'",zh:"我的错（口语）",ex:"Oops, I sent you the wrong file — my bad.",exzh:"哎呀，我发错文件了——我的错。"},
+ {w:"no big deal",pos:"phrase",def:"it's not important; don't worry about it",zh:"没什么大不了的",ex:"You're five minutes late, no big deal.",exzh:"你就迟到了五分钟，没什么大不了的。"},
+ {w:"off the top of my head",pos:"phrase",def:"answering from memory, without checking",zh:"不假思索地；凭记忆",ex:"Off the top of my head, I'd say it costs around $200.",exzh:"凭印象说的话，大概要200美元左右。"},
+ {w:"play it by ear",pos:"idiom",def:"to decide as things happen instead of planning ahead",zh:"见机行事；走一步看一步",ex:"We don't have a fixed plan — let's play it by ear.",exzh:"我们没有固定计划——到时候见机行事吧。"},
+ {w:"pull someone's leg",pos:"idiom",def:"to joke or tease someone playfully",zh:"开玩笑；逗某人",ex:"Relax, I'm just pulling your leg!",exzh:"放松点，我只是在逗你玩！"},
+ {w:"rain check",pos:"idiom",def:"to politely postpone an invitation",zh:"改天再约",ex:"Can I take a rain check on dinner? I'm swamped.",exzh:"晚饭能改天再约吗？我忙死了。"},
+ {w:"ring a bell",pos:"idiom",def:"to sound familiar",zh:"听起来耳熟",ex:"That name rings a bell, but I can't remember where from.",exzh:"那个名字听起来耳熟，但我记不起在哪听过。"},
+ {w:"sleep on it",pos:"idiom",def:"to wait until tomorrow before deciding",zh:"考虑一晚再决定",ex:"It's a big decision — sleep on it and tell me tomorrow.",exzh:"这是个重大决定——先考虑一晚，明天再告诉我。"},
+ {w:"speak of the devil",pos:"idiom",def:"said when the person you were talking about appears",zh:"说曹操，曹操到",ex:"Speak of the devil — we were just talking about you!",exzh:"说曹操曹操到——我们刚才正聊到你呢！"},
+ {w:"the ball is in your court",pos:"idiom",def:"it's your turn to act or decide",zh:"该你做决定了；球在你那边",ex:"I've made my offer — the ball is in your court now.",exzh:"我已经开出条件了——现在该你决定了。"},
+ {w:"touch base",pos:"idiom",def:"to briefly contact someone for an update",zh:"联系一下；碰个头",ex:"Let's touch base next week about the project.",exzh:"我们下周就项目的事联系一下吧。"},
+ {w:"when pigs fly",pos:"idiom",def:"never; impossible",zh:"绝不可能；太阳打西边出来",ex:"He'll clean his room when pigs fly.",exzh:"等他打扫房间？除非太阳打西边出来。"},
+];
+
+const DECKS = { vocab: VOCAB, slang: SLANG, phrases: PHRASES };
+const DECK_NAMES = { vocab: "Vocabulary 词汇", slang: "Slang 俚语", phrases: "Phrases & Idioms 短语习语" };
+
+/* ============== state & persistence ============== */
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+};
+let mastered = store.get("eb_mastered", {});       // {"vocab:3": true}
+let quizStats = store.get("eb_quiz", { right: 0, wrong: 0 });
+let streak = store.get("eb_streak", { last: null, count: 0 });
+
+function touchStreak() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (streak.last === today) return;
+  const yest = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+  streak.count = streak.last === yest ? streak.count + 1 : 1;
+  streak.last = today;
+  store.set("eb_streak", streak);
+  renderStreak();
+}
+function renderStreak() {
+  document.getElementById("streak").textContent =
+    streak.count > 0 ? `🔥 ${streak.count}-day streak 连续学习 ${streak.count} 天` : "";
+}
+renderStreak();
+
+/* ============== tabs ============== */
+let currentDeck = "vocab";
+let studyMode = "cards"; // cards | list | unmastered
+const tabs = document.querySelectorAll("nav button");
+tabs.forEach(b => b.addEventListener("click", () => {
+  tabs.forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  const t = b.dataset.tab;
+  document.getElementById("study").classList.toggle("hidden", !(t in DECKS));
+  document.getElementById("quiz").classList.toggle("hidden", t !== "quiz");
+  document.getElementById("translate").classList.toggle("hidden", t !== "translate");
+  document.getElementById("progress").classList.toggle("hidden", t !== "progress");
+  if (t in DECKS) { currentDeck = t; buildQueue(); renderStudy(); }
+  if (t === "quiz") nextQuestion();
+  if (t === "progress") renderProgress();
+}));
+
+/* ============== flashcards ============== */
+let queue = [], idx = 0;
+function deckItems() {
+  const items = DECKS[currentDeck].map((it, i) => ({ ...it, id: currentDeck + ":" + i }));
+  if (studyMode === "unmastered") return items.filter(it => !mastered[it.id]);
+  return items;
+}
+function buildQueue() {
+  queue = deckItems();
+  shuffle(queue);
+  idx = 0;
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+
+const card = document.getElementById("card");
+card.addEventListener("click", () => card.classList.toggle("flipped"));
+
+function renderStudy() {
+  const cardsView = document.getElementById("cardsView");
+  const listView = document.getElementById("listView");
+  if (studyMode === "list") {
+    cardsView.classList.add("hidden");
+    listView.classList.remove("hidden");
+    renderList();
+  } else {
+    cardsView.classList.remove("hidden");
+    listView.classList.add("hidden");
+    renderCard();
+  }
+}
+function renderCard() {
+  const info = document.getElementById("deckInfo");
+  if (!queue.length) {
+    info.textContent = "🎉 All mastered! Switch to Browse or pick another deck. 全部掌握啦！";
+    ["cWord","cPos","cZh","cDef","cEx","cExZh"].forEach(id => document.getElementById(id).textContent = "");
+    document.getElementById("cWord").textContent = "🎉";
+    return;
+  }
+  if (idx >= queue.length) { buildQueue(); }
+  const it = queue[idx];
+  card.classList.remove("flipped");
+  const masteredCount = deckItems().filter(x => mastered[x.id]).length;
+  info.textContent = `${DECK_NAMES[currentDeck]} · card ${idx + 1}/${queue.length} · mastered ${masteredCount}/${DECKS[currentDeck].length}`;
+  document.getElementById("cWord").textContent = it.w;
+  document.getElementById("cPos").textContent = it.pos;
+  document.getElementById("cZh").textContent = it.zh;
+  document.getElementById("cDef").textContent = it.def;
+  document.getElementById("cEx").textContent = "“" + it.ex + "”";
+  document.getElementById("cExZh").textContent = it.exzh;
+}
+document.getElementById("btnGot").addEventListener("click", () => {
+  if (!queue.length) return;
+  mastered[queue[idx].id] = true;
+  store.set("eb_mastered", mastered);
+  touchStreak();
+  idx++; renderCard();
+});
+document.getElementById("btnAgain").addEventListener("click", () => {
+  if (!queue.length) return;
+  const it = queue[idx];
+  delete mastered[it.id];
+  store.set("eb_mastered", mastered);
+  touchStreak();
+  // move card a few positions back into the queue
+  queue.splice(idx, 1);
+  queue.splice(Math.min(idx + 3, queue.length), 0, it);
+  renderCard();
+});
+document.getElementById("btnShuffle").addEventListener("click", () => { buildQueue(); renderCard(); });
+document.getElementById("btnSpeak").addEventListener("click", () => {
+  if (!queue.length || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(queue[idx].w + ". " + queue[idx].ex);
+  u.lang = "en-US"; u.rate = 0.95;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+});
+
+/* mode switch */
+const modeBtns = { cards: document.getElementById("modeCards"), list: document.getElementById("modeList"), unmastered: document.getElementById("modeUnmastered") };
+Object.entries(modeBtns).forEach(([m, b]) => b.addEventListener("click", () => {
+  studyMode = m;
+  Object.values(modeBtns).forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  buildQueue(); renderStudy();
+}));
+
+function renderList() {
+  const el = document.getElementById("listView");
+  const items = DECKS[currentDeck].map((it, i) => ({ ...it, id: currentDeck + ":" + i }));
+  el.innerHTML = items.map(it => `
+    <div class="list-item ${mastered[it.id] ? "mastered" : ""}">
+      <div class="row1"><span class="w">${it.w} <span style="color:var(--accent);font-size:13px;font-weight:400">${it.pos}</span></span><span class="zh">${it.zh}</span></div>
+      <div class="def">${it.def}</div>
+      <div class="ex">“${it.ex}”<br>${it.exzh}</div>
+    </div>`).join("");
+}
+
+/* ============== quiz ============== */
+let qCurrent = null;
+function allItems() {
+  return Object.entries(DECKS).flatMap(([d, arr]) => arr.map((it, i) => ({ ...it, id: d + ":" + i, deck: d })));
+}
+function nextQuestion() {
+  const pool = allItems();
+  const answer = pool[Math.floor(Math.random() * pool.length)];
+  const wrongs = [];
+  // distractors from the same deck so options feel similar
+  const sameDeck = pool.filter(x => x.deck === answer.deck && x.id !== answer.id);
+  shuffle(sameDeck);
+  wrongs.push(...sameDeck.slice(0, 3));
+  const opts = [answer, ...wrongs];
+  shuffle(opts);
+  qCurrent = { answer, opts, answered: false };
+
+  const reverse = Math.random() < 0.4; // 40%: show word, pick meaning
+  qCurrent.reverse = reverse;
+  document.getElementById("qLabel").textContent = reverse
+    ? "What does this mean? 这个词是什么意思？"
+    : "Which word matches this meaning? 哪个词符合这个意思？";
+  document.getElementById("qText").textContent = reverse ? answer.w : answer.def;
+  document.getElementById("qZh").textContent = reverse ? "" : answer.zh;
+
+  const box = document.getElementById("qOpts");
+  box.innerHTML = "";
+  opts.forEach(o => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.textContent = reverse ? `${o.def}（${o.zh}）` : o.w;
+    b.addEventListener("click", () => answerQuiz(b, o));
+    box.appendChild(b);
+  });
+  document.getElementById("qNext").classList.add("hidden");
+  renderQuizScore();
+}
+function answerQuiz(btn, chosen) {
+  if (qCurrent.answered) return;
+  qCurrent.answered = true;
+  touchStreak();
+  const correct = chosen.id === qCurrent.answer.id;
+  if (correct) { quizStats.right++; btn.classList.add("correct"); }
+  else {
+    quizStats.wrong++; btn.classList.add("wrong");
+    [...document.querySelectorAll(".opt")].forEach(b => {
+      const isAns = qCurrent.reverse
+        ? b.textContent.startsWith(qCurrent.answer.def)
+        : b.textContent === qCurrent.answer.w;
+      if (isAns) b.classList.add("correct");
+    });
+  }
+  store.set("eb_quiz", quizStats);
+  renderQuizScore();
+  document.getElementById("qNext").classList.remove("hidden");
+}
+function renderQuizScore() {
+  const t = quizStats.right + quizStats.wrong;
+  document.getElementById("quizScore").textContent =
+    t ? `Score: ${quizStats.right} ✓ / ${quizStats.wrong} ✗ (${Math.round(quizStats.right / t * 100)}%)` : "Answer questions to build your score! 开始答题吧！";
+}
+document.getElementById("qNext").addEventListener("click", nextQuestion);
+
+/* ============== translate ============== */
+let trEnToZh = true;
+document.getElementById("trSwap").addEventListener("click", () => {
+  trEnToZh = !trEnToZh;
+  document.getElementById("trFrom").textContent = trEnToZh ? "English" : "中文 (Mandarin)";
+  document.getElementById("trTo").textContent = trEnToZh ? "中文 (Mandarin)" : "English";
+});
+document.getElementById("trGo").addEventListener("click", doTranslate);
+document.getElementById("trInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) doTranslate();
+});
+async function doTranslate() {
+  const q = document.getElementById("trInput").value.trim();
+  const out = document.getElementById("trOut");
+  if (!q) return;
+  touchStreak();
+  out.classList.remove("placeholder");
+  out.textContent = "Translating… 翻译中…";
+  // check built-in decks first for exact slang/phrase matches
+  const local = allItems().find(it => it.w.toLowerCase() === q.toLowerCase());
+  if (local && trEnToZh) {
+    out.textContent = `${local.zh}\n\n${local.def}\nExample: ${local.ex}\n${local.exzh}\n\n(from built-in dictionary 来自内置词典)`;
+    return;
+  }
+  try {
+    const pair = trEnToZh ? "en|zh-CN" : "zh-CN|en";
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(q)}&langpair=${pair}`);
+    const data = await res.json();
+    const t = data?.responseData?.translatedText;
+    out.textContent = t || "Sorry, no translation returned. 抱歉，没有返回翻译结果。";
+  } catch {
+    out.textContent = "⚠️ Translation failed — check your internet connection. 翻译失败，请检查网络连接。";
+  }
+}
+
+/* ============== progress ============== */
+function renderProgress() {
+  const m = Object.keys(mastered).length;
+  document.getElementById("stMastered").textContent = m;
+  document.getElementById("stStreak").textContent = streak.count;
+  document.getElementById("stQuizRight").textContent = quizStats.right;
+  const t = quizStats.right + quizStats.wrong;
+  document.getElementById("stQuizAcc").textContent = t ? Math.round(quizStats.right / t * 100) + "%" : "–";
+  const bars = document.getElementById("bars");
+  bars.innerHTML = Object.entries(DECKS).map(([d, arr]) => {
+    const done = arr.filter((_, i) => mastered[d + ":" + i]).length;
+    const pct = Math.round(done / arr.length * 100);
+    return `<div class="bar-row">
+      <div class="bl"><span>${DECK_NAMES[d]}</span><span>${done}/${arr.length}</span></div>
+      <div class="bar"><div style="width:${pct}%"></div></div>
+    </div>`;
+  }).join("");
+}
+document.getElementById("btnReset").addEventListener("click", () => {
+  if (!confirm("Reset all progress? 确定要重置全部进度吗？")) return;
+  mastered = {}; quizStats = { right: 0, wrong: 0 }; streak = { last: null, count: 0 };
+  store.set("eb_mastered", mastered); store.set("eb_quiz", quizStats); store.set("eb_streak", streak);
+  renderProgress(); renderStreak();
+});
+
+/* init */
+buildQueue();
+renderStudy();
+</script>
+</body>
+</html>
