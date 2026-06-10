@@ -168,7 +168,7 @@
 
 <header>
   <h1>🎓 English Buddy <span style="color:var(--accent)">英语伙伴</span></h1>
-  <p>Vocabulary · Slang · Phrases · Quiz · 中英翻译</p>
+  <p>Vocabulary · Slang · Phrases · Phrasal Verbs · Sound Native · 中英翻译</p>
   <div class="streak" id="streak"></div>
 </header>
 
@@ -176,6 +176,8 @@
   <button data-tab="vocab" class="active">📚 Vocab</button>
   <button data-tab="slang">🗣️ Slang</button>
   <button data-tab="phrases">💬 Phrases</button>
+  <button data-tab="phrasal">🧩 Phrasal</button>
+  <button data-tab="native">🎤 Native</button>
   <button data-tab="quiz">🎯 Quiz</button>
   <button data-tab="translate">🔁 Translate</button>
   <button data-tab="progress">📈 Progress</button>
@@ -354,8 +356,68 @@ const PHRASES = [
  {w:"when pigs fly",pos:"idiom",def:"never; impossible",zh:"绝不可能；太阳打西边出来",ex:"He'll clean his room when pigs fly.",exzh:"等他打扫房间？除非太阳打西边出来。"},
 ];
 
-const DECKS = { vocab: VOCAB, slang: SLANG, phrases: PHRASES };
-const DECK_NAMES = { vocab: "Vocabulary 词汇", slang: "Slang 俚语", phrases: "Phrases & Idioms 短语习语" };
+/* Phrasal verbs — the #1 gap between "advanced" and "native".
+   Natives say "put up with", learners say "tolerate". */
+const PHRASAL = [
+ {w:"put up with",pos:"phr. v.",def:"to tolerate something annoying — natives almost never say 'tolerate' in speech",zh:"忍受；容忍",ex:"I can't put up with this noise anymore.",exzh:"这噪音我再也忍不了了。"},
+ {w:"figure out",pos:"phr. v.",def:"to understand or solve after thinking (more natural than 'solve' or 'understand')",zh:"弄明白；想出办法",ex:"I can't figure out why the code is broken.",exzh:"我搞不明白代码为什么出问题了。"},
+ {w:"come across (as)",pos:"phr. v.",def:"to give a certain impression; also: to find something by chance",zh:"给人……的印象；偶然发现",ex:"He comes across as arrogant, but he's just shy.",exzh:"他给人感觉很傲慢，其实只是害羞。"},
+ {w:"end up",pos:"phr. v.",def:"to finally be in a situation you didn't plan",zh:"最终落得；结果变成",ex:"We ended up ordering pizza at 2am.",exzh:"我们最后凌晨两点点了披萨。"},
+ {w:"run into",pos:"phr. v.",def:"to meet someone unexpectedly (more natural than 'encounter')",zh:"偶遇；碰到",ex:"I ran into my old boss at the gym.",exzh:"我在健身房偶遇了以前的老板。"},
+ {w:"bring up",pos:"phr. v.",def:"to mention a topic (more natural than 'mention')",zh:"提起（话题）",ex:"Don't bring up politics at dinner.",exzh:"吃饭时别提政治话题。"},
+ {w:"back out",pos:"phr. v.",def:"to withdraw from a promise or deal at the last moment",zh:"反悔；临时退出",ex:"He backed out of the deal at the last minute.",exzh:"他在最后一刻反悔退出了交易。"},
+ {w:"blow off",pos:"phr. v.",def:"to skip something or ignore someone on purpose",zh:"故意爽约；放鸽子",ex:"She blew off the meeting to go shopping.",exzh:"她为了去购物把会议给翘了。"},
+ {w:"catch up",pos:"phr. v.",def:"to chat with someone you haven't seen in a while; to reach the same level",zh:"叙旧；赶上",ex:"Let's grab coffee and catch up!",exzh:"我们喝杯咖啡叙叙旧吧！"},
+ {w:"cut back on",pos:"phr. v.",def:"to reduce (more natural than 'reduce' or 'decrease')",zh:"减少；削减",ex:"I'm trying to cut back on sugar.",exzh:"我在努力减少糖的摄入。"},
+ {w:"follow through",pos:"phr. v.",def:"to actually finish what you promised or started",zh:"坚持做完；兑现承诺",ex:"He makes big plans but never follows through.",exzh:"他总是计划宏大，却从不坚持做完。"},
+ {w:"get over",pos:"phr. v.",def:"to recover from an illness, a breakup, or a disappointment",zh:"走出（失恋/疾病）；释怀",ex:"It took her a year to get over the breakup.",exzh:"她花了一年才走出那段分手的阴影。"},
+ {w:"give in",pos:"phr. v.",def:"to finally agree after resisting (more natural than 'yield')",zh:"让步；屈服",ex:"The kids begged for ice cream until I gave in.",exzh:"孩子们一直闹着要冰淇淋，直到我让了步。"},
+ {w:"hold up",pos:"phr. v.",def:"to delay someone or something",zh:"耽搁；延误",ex:"Sorry I'm late — traffic held me up.",exzh:"抱歉迟到了——路上堵车把我耽搁了。"},
+ {w:"look into",pos:"phr. v.",def:"to investigate (more natural than 'investigate')",zh:"调查；了解一下",ex:"I'll look into the issue and get back to you.",exzh:"我会了解一下这个问题然后回复你。"},
+ {w:"make up for",pos:"phr. v.",def:"to compensate for something bad you did or missed",zh:"弥补",ex:"He bought her flowers to make up for forgetting her birthday.",exzh:"他买花来弥补忘记她生日这件事。"},
+ {w:"pull off",pos:"phr. v.",def:"to succeed at something difficult or unexpected",zh:"（成功）做到难事",ex:"Nobody thought we'd finish on time, but we pulled it off.",exzh:"没人觉得我们能按时完成，但我们做到了。"},
+ {w:"put off",pos:"phr. v.",def:"to postpone (more natural than 'postpone')",zh:"推迟；拖延",ex:"Stop putting off the dentist appointment.",exzh:"别再拖着不去看牙医了。"},
+ {w:"run out of",pos:"phr. v.",def:"to use all of something so none is left",zh:"用完；耗尽",ex:"We ran out of milk this morning.",exzh:"今天早上我们的牛奶用完了。"},
+ {w:"sort out",pos:"phr. v.",def:"to fix a problem or organize something (more natural than 'resolve')",zh:"解决；处理好",ex:"Give me a day to sort out the visa paperwork.",exzh:"给我一天时间处理好签证材料。"},
+ {w:"talk (someone) into",pos:"phr. v.",def:"to persuade someone to do something (more natural than 'persuade')",zh:"说服（某人做某事）",ex:"My friends talked me into karaoke.",exzh:"朋友们说服我去唱了K。"},
+ {w:"turn down",pos:"phr. v.",def:"to reject an offer, request, or person (more natural than 'reject')",zh:"拒绝",ex:"She turned down the job offer because of the commute.",exzh:"因为通勤问题，她拒绝了那份工作。"},
+ {w:"wear out",pos:"phr. v.",def:"to make someone exhausted; to use something until it breaks",zh:"使筋疲力尽；磨坏",ex:"The kids wore me out this weekend.",exzh:"这周末孩子们把我累垮了。"},
+ {w:"work out",pos:"phr. v.",def:"to exercise; also: to end up fine, or to find a solution",zh:"健身；（事情）顺利解决",ex:"Don't worry, it'll all work out.",exzh:"别担心，一切都会顺利解决的。"},
+ {w:"wing it",pos:"phr. v.",def:"to improvise without preparation (more natural than 'improvise')",zh:"即兴发挥；临场应付",ex:"I didn't prepare a speech, so I just winged it.",exzh:"我没准备演讲稿，就即兴发挥了。"},
+];
+
+/* "Make it native" — textbook sentence on the front,
+   what a native would actually say on the back (zh = ✅ native version). */
+const NATIVE = [
+ {w:"❌ I very like it.",pos:"",zh:"✅ I really like it. / I'm really into it.",def:"\"very\" can't modify a verb. \"Be into something\" 是地道的「很喜欢」。",ex:"I'm really into hiking lately.",exzh:"我最近特别迷徒步。"},
+ {w:"❌ How to say this in English?",pos:"",zh:"✅ How do you say this in English?",def:"Questions need \"do\" — \"How to...\" only works in titles, not speech. 疑问句必须有助动词。",ex:"How do you say 加油 in English?",exzh:"「加油」用英语怎么说？"},
+ {w:"❌ Open the light.",pos:"",zh:"✅ Turn on the light.",def:"中文「开/关」直译成 open/close 是经典错误——电器要用 turn on / turn off。",ex:"Could you turn off the AC? It's freezing.",exzh:"你能把空调关掉吗？冻死了。"},
+ {w:"❌ I am very tired.",pos:"",zh:"✅ I'm exhausted. / I'm beat. / I'm wiped.",def:"Natives replace \"very + weak adjective\" with one strong word. 用一个强词代替 very+弱形容词。",ex:"Long day — I'm absolutely beat.",exzh:"今天太累了——我快累瘫了。"},
+ {w:"❌ It's very delicious.",pos:"",zh:"✅ This is so good! / This is amazing.",def:"\"Delicious\" is already a strong word — natives mostly just say \"so good\". 母语者夸好吃通常直接说 so good。",ex:"Oh my god, these dumplings are so good.",exzh:"天哪，这饺子也太好吃了。"},
+ {w:"❌ I'm boring.",pos:"",zh:"✅ I'm bored.",def:"-ed 描述你的感受，-ing 描述事物本身。\"I'm boring\" = 「我这个人很无趣」！",ex:"I'm bored — wanna grab a coffee?",exzh:"我好无聊——要不要去喝杯咖啡？"},
+ {w:"❌ What's your meaning?",pos:"",zh:"✅ What do you mean?",def:"\"Meaning\" 指词义；问对方的意图要用动词 mean。",ex:"Wait, what do you mean you quit?",exzh:"等等，你说你辞职了是什么意思？"},
+ {w:"❌ I have ever been to Japan.",pos:"",zh:"✅ I've been to Japan (before).",def:"\"Ever\" only appears in questions and negatives. ever 只用于疑问句和否定句。",ex:"Have you ever been to Japan? — Yeah, twice!",exzh:"你去过日本吗？——去过两次！"},
+ {w:"❌ Please give me a coffee.",pos:"",zh:"✅ Could I get a latte, please? / I'll have a latte.",def:"Ordering: natives use \"Can/Could I get...\" or \"I'll have...\". 点单的地道句式。",ex:"Hi, could I get a medium iced latte?",exzh:"你好，我要一杯中杯冰拿铁。"},
+ {w:"❌ I want to ask you a question.",pos:"",zh:"✅ Quick question. / Can I ask you something?",def:"口语里更轻巧自然，直接进入正题。",ex:"Hey, quick question — are you free Friday?",exzh:"哎，问一下——你周五有空吗？"},
+ {w:"❌ I'll consider it.",pos:"",zh:"✅ Let me think it over. / I'll sleep on it.",def:"\"Consider\" sounds formal in conversation. 口语中 consider 显得公文化。",ex:"Tempting offer — let me sleep on it.",exzh:"这提议很诱人——让我考虑一晚。"},
+ {w:"❌ Maybe I will go.",pos:"",zh:"✅ I might go. / I'll probably go.",def:"Overusing \"maybe\" is a learner habit — natives prefer might / probably. 少用 maybe，多用 might。",ex:"I might swing by later.",exzh:"我晚点可能会过去看看。"},
+ {w:"❌ I'm fine, thank you. And you?",pos:"",zh:"✅ Pretty good, thanks! You? / Not bad, how about you?",def:"The textbook reply instantly marks you as a learner. 课本式回答一听就是教科书。",ex:"Hey, how's it going? — Pretty good! You?",exzh:"最近怎么样？——挺好的！你呢？"},
+ {w:"❌ So-so.",pos:"",zh:"✅ It was OK. / Not great. / Meh.",def:"Natives almost never say \"so-so\". 母语者几乎不说 so-so。",ex:"How was the movie? — Meh, it was OK.",exzh:"电影怎么样？——一般般吧。"},
+ {w:"❌ I forgot my phone at home.",pos:"",zh:"✅ I left my phone at home.",def:"把东西落在某处用 leave；forget 后面不接地点。",ex:"Ugh, I left my wallet in the car.",exzh:"哎，我把钱包落车里了。"},
+ {w:"❌ I am agree with you.",pos:"",zh:"✅ I agree. / I'm with you. / Fair enough.",def:"Agree 是动词不是形容词，不加 am。\"I'm with you\" 更口语。",ex:"Honestly, I'm with you on this one.",exzh:"说真的，这件事我站你这边。"},
+ {w:"❌ He is my good friend.",pos:"",zh:"✅ He's a good friend of mine. / We're really close.",def:"语法没错但不自然——natives 用 \"of mine\" 或直接说关系近。",ex:"Sarah? Yeah, we're really close.",exzh:"萨拉？对，我们关系特别好。"},
+ {w:"❌ In my opinion... (every sentence)",pos:"",zh:"✅ Honestly, ... / If you ask me, ... / The way I see it, ...",def:"口语中表达观点的多种地道开头，别每句都 in my opinion。",ex:"If you ask me, the sequel was way better.",exzh:"要我说，续集好看多了。"},
+ {w:"❌ Firstly... Secondly... Finally...",pos:"",zh:"✅ First off, ... / Plus, ... / On top of that, ...",def:"Firstly/secondly 是书面语；口语用 first off / plus。",ex:"First off, it's cheap. Plus, it's right by the subway.",exzh:"首先它便宜，再说就在地铁旁边。"},
+ {w:"❌ I want to improve my English.",pos:"",zh:"✅ I'm working on my English.",def:"\"Work on\" = 正在努力提升，比 \"want to improve\" 更地道更有行动感。",ex:"I'm working on sounding more natural.",exzh:"我在努力让自己的表达更自然。"},
+ {w:"❌ going to / want to / let me (always full)",pos:"",zh:"✅ gonna / wanna / gotta / lemme / kinda",def:"Natives reduce these by default in speech — using them is normal, not lazy. 口语缩读是默认状态。",ex:"I'm gonna grab lunch, wanna come?",exzh:"我要去吃午饭，要一起吗？"},
+ {w:"❌ How do you think?",pos:"",zh:"✅ What do you think? / Thoughts?",def:"问想法用 what（think 的内容），不用 how。",ex:"I redesigned the logo — thoughts?",exzh:"我重新设计了logo——你觉得怎么样？"},
+ {w:"❌ My English is poor.",pos:"",zh:"✅ My English isn't great yet — I'm still working on it.",def:"\"Poor\" 自贬过度，natives 听着反而别扭；轻描淡写更自然。",ex:"Bear with me — I'm still working on my English.",exzh:"请多包涵——我的英语还在进步中。"},
+ {w:"❌ very big / very small / very good",pos:"",zh:"✅ huge / tiny / awesome",def:"Strong adjectives beat \"very + weak adjective\" every time. 用强形容词替代 very+弱形容词。",ex:"Their new apartment is huge.",exzh:"他们的新公寓超大。"},
+ {w:"❌ Thanks a lot.",pos:"",zh:"✅ Thanks so much! / I really appreciate it.",def:"\"Thanks a lot\" 语气不对时听起来像讽刺（阴阳怪气）；appreciate 更真诚。",ex:"I really appreciate you helping me move.",exzh:"真的很感谢你帮我搬家。"},
+];
+
+const DECKS = { vocab: VOCAB, slang: SLANG, phrases: PHRASES, phrasal: PHRASAL, native: NATIVE };
+const DECK_NAMES = { vocab: "Vocabulary 词汇", slang: "Slang 俚语", phrases: "Phrases & Idioms 短语习语", phrasal: "Phrasal Verbs 短语动词", native: "Sound Native 地道表达" };
 
 /* ============== state & persistence ============== */
 const store = {
@@ -441,8 +503,11 @@ function renderCard() {
   card.classList.remove("flipped");
   const masteredCount = deckItems().filter(x => mastered[x.id]).length;
   info.textContent = `${DECK_NAMES[currentDeck]} · card ${idx + 1}/${queue.length} · mastered ${masteredCount}/${DECKS[currentDeck].length}`;
-  document.getElementById("cWord").textContent = it.w;
-  document.getElementById("cPos").textContent = it.pos;
+  const wEl = document.getElementById("cWord");
+  wEl.textContent = it.w;
+  wEl.style.fontSize = it.w.length > 24 ? "22px" : "34px";
+  document.getElementById("cPos").textContent =
+    currentDeck === "native" ? "How would a native say it? 母语者会怎么说？" : it.pos;
   document.getElementById("cZh").textContent = it.zh;
   document.getElementById("cDef").textContent = it.def;
   document.getElementById("cEx").textContent = "“" + it.ex + "”";
@@ -469,7 +534,10 @@ document.getElementById("btnAgain").addEventListener("click", () => {
 document.getElementById("btnShuffle").addEventListener("click", () => { buildQueue(); renderCard(); });
 document.getElementById("btnSpeak").addEventListener("click", () => {
   if (!queue.length || !window.speechSynthesis) return;
-  const u = new SpeechSynthesisUtterance(queue[idx].w + ". " + queue[idx].ex);
+  const it = queue[idx];
+  // for the native deck, pronounce the ✅ native version, not the ❌ textbook one
+  const spoken = currentDeck === "native" ? it.zh.replace(/[✅❌\/]/g, " ") : it.w;
+  const u = new SpeechSynthesisUtterance(spoken + ". " + it.ex);
   u.lang = "en-US"; u.rate = 0.95;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 });
@@ -511,20 +579,25 @@ function nextQuestion() {
   shuffle(opts);
   qCurrent = { answer, opts, answered: false };
 
-  const reverse = Math.random() < 0.4; // 40%: show word, pick meaning
+  // native deck gets its own question format: fix the textbook sentence
+  const isNative = answer.deck === "native";
+  const reverse = !isNative && Math.random() < 0.4; // 40%: show word, pick meaning
   qCurrent.reverse = reverse;
-  document.getElementById("qLabel").textContent = reverse
-    ? "What does this mean? 这个词是什么意思？"
-    : "Which word matches this meaning? 哪个词符合这个意思？";
-  document.getElementById("qText").textContent = reverse ? answer.w : answer.def;
-  document.getElementById("qZh").textContent = reverse ? "" : answer.zh;
+  document.getElementById("qLabel").textContent = isNative
+    ? "How would a native say this? 母语者会怎么说？"
+    : reverse
+      ? "What does this mean? 这个词是什么意思？"
+      : "Which word matches this meaning? 哪个词符合这个意思？";
+  document.getElementById("qText").textContent = (isNative || reverse) ? answer.w : answer.def;
+  document.getElementById("qZh").textContent = (isNative || reverse) ? "" : answer.zh;
 
   const box = document.getElementById("qOpts");
   box.innerHTML = "";
   opts.forEach(o => {
     const b = document.createElement("button");
     b.className = "opt";
-    b.textContent = reverse ? `${o.def}（${o.zh}）` : o.w;
+    b.textContent = isNative ? o.zh : reverse ? `${o.def}（${o.zh}）` : o.w;
+    b.dataset.id = o.id;
     b.addEventListener("click", () => answerQuiz(b, o));
     box.appendChild(b);
   });
@@ -540,10 +613,7 @@ function answerQuiz(btn, chosen) {
   else {
     quizStats.wrong++; btn.classList.add("wrong");
     [...document.querySelectorAll(".opt")].forEach(b => {
-      const isAns = qCurrent.reverse
-        ? b.textContent.startsWith(qCurrent.answer.def)
-        : b.textContent === qCurrent.answer.w;
-      if (isAns) b.classList.add("correct");
+      if (b.dataset.id === qCurrent.answer.id) b.classList.add("correct");
     });
   }
   store.set("eb_quiz", quizStats);
